@@ -1,4 +1,29 @@
 @charset 'utf-8';
 
+@import './setting/reset';
 @import './setting/config';
 @import './setting/function';
+
+.merry {
+  &-wrap {
+    position: relative;
+  }
+  &-cont {
+    font-size: 0;
+    word-break: keep-all;
+    white-space: nowrap;
+
+    & > * {
+      display: inline-block;
+    }
+  }
+
+  &-indicator {
+    margin-top: 10px;
+    text-align: center;
+  }
+  &-dot {
+    display: inline-block;
+    padding: 0 5px;
+  }
+}
