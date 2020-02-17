@@ -5,7 +5,7 @@
     "watch:server": "browser-sync start --config bs-config.js",
     "watch:webpack": "webpack --watch",
     "build": "webpack",
-    "w": "npm-run-all -p watch:webpack watch:server"
+    "dev": "npm-run-all -p watch:webpack watch:server"
   },
   "author": "tsudoi yoshimoto",
   "license": "ISC",
