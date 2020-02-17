@@ -5,25 +5,86 @@
 @import './setting/function';
 
 .merry {
-  &-wrap {
-    position: relative;
-  }
-  &-cont {
-    font-size: 0;
-    word-break: keep-all;
-    white-space: nowrap;
+	&-wrap {
+		position: relative;
+		overflow: hidden;
+	}
+	&-cont {
+		font-size: 0;
+		word-break: keep-all;
+		white-space: nowrap;
 
-    & > * {
-      display: inline-block;
-    }
-  }
+		& > * {
+			display: inline-block;
+		}
+	}
 
-  &-indicator {
-    margin-top: 10px;
-    text-align: center;
-  }
-  &-dot {
-    display: inline-block;
-    padding: 0 5px;
-  }
+	&-indicator {
+		margin-top: 10px;
+		text-align: center;
+	}
+	&-dot {
+		display: inline-block;
+		padding: 0 5px;
+
+		button {
+			padding: 0;
+			-webkit-appearance: none;
+			font-size: 0;
+			border: none;
+			background: none;
+      padding: 5px;
+      background: #555;
+      border-radius: 50%;
+		}
+	}
+
+	&-arrowList {
+		width: 100%;
+		position: absolute;
+		top: 50%;
+	}
+	&-arrow {
+		cursor: pointer;
+		display: inline-block;
+		position: absolute;
+		transform: translateY(-50%);
+
+		button {
+			padding: 0;
+			-webkit-appearance: none;
+			font-size: 0;
+			border: none;
+			background: none;
+			padding: 5px;
+
+			&:before {
+				content: '';
+				display: block;
+				width: 10px;
+				height: 10px;
+				border-bottom: 1px solid;
+				border-right: 1px solid;
+			}
+		}
+
+		&-prev {
+			left: 0;
+			button {
+				transform: rotate(135deg);
+			}
+		}
+		&-next {
+			right: 0;
+			button {
+				transform: rotate(-45deg);
+			}
+		}
+	}
+
+	&-slide {
+		& > * {
+			width: 100%;
+		}
+	}
 }

@@ -8,6 +8,7 @@ export default class MerryGoRound {
   constructor(option) {
     this.elId = option.el;
     this.indicator = option.indicator;
+    this.arrow = option.arrow;
     this.count = option.count;
     this.slideSpeed = option.slideSpeed;
 
@@ -16,6 +17,12 @@ export default class MerryGoRound {
 
   init() {
     this.setSlideStyle()
+    // インジケーターの設定
+    this.setIndicator()
+    // 矢印の設定
+    this.setArrow()
+    // スライダーの設定
+    this.setSlider()
   }
 
   /*------------------------------
@@ -28,14 +35,11 @@ export default class MerryGoRound {
     this.list.outerHTML = `<div class='merry-wrap'>${this.list.outerHTML}</div>`;
     console.log(this.list)
     this.cont = document.getElementById(this.elId).parentNode
-
-    //インジケーターの設定
-    this.setIndicator()
   }
 
   /*------------------------------
   // インジケーターの設定
-  // optionがfalse出ない限り表示する
+  // option:indicator がfalseでない限り表示する
   ------------------------------*/
   setIndicator() {
     if (this.indicator != false) {
@@ -58,5 +62,55 @@ export default class MerryGoRound {
         this.DotWrap.appendChild(newDot);
       }
     }
+  }
+
+  /*------------------------------
+  // 左右矢印の設定
+  // option:arrow がfalseでない限り表示する
+  ------------------------------*/
+  setArrow() {
+    if (this.arrow != false) {
+      //左右矢印の親要素を作成する
+      let newArrowWrap = document.createElement('ul');
+      newArrowWrap.setAttribute('class', 'merry-arrowList');
+      this.cont.insertBefore(newArrowWrap, document.getElementById(this.elId))
+
+      //slideのアイテム数ボタンを作成
+      for (let i = 0; i < 2; i++) {
+        let newArrow = document.createElement('li');
+        let newArrowBtn = document.createElement('button');
+        let newArrowContent = document.createTextNode(i + 1);
+        newArrowBtn.appendChild(newArrowContent);
+        newArrow.appendChild(newArrowBtn);
+        newArrow.setAttribute('class', 'merry-arrow');
+        //ボタンに各々クラスを付与する
+        if (i == 0) {
+          newArrow.classList.add('merry-arrow-prev')
+        } else {
+          newArrow.classList.add('merry-arrow-next')
+        }
+
+        this.ArrowWrap = document.getElementById(this.elId).previousElementSibling
+        this.ArrowWrap.appendChild(newArrow);
+      }
+    }
+  }
+
+  /*------------------------------
+  // スライドする枚数の設定
+  // countが指定してあればその枚数、指定がなければ1枚
+  ------------------------------*/
+  setSlider() {
+    let winW = window.innerWidth;
+    let slideCount = this.count > 0 ? this.count : 1
+    let slideItmes = document.getElementById(this.elId).children;
+    console.log(slideItmes)
+    for (let i = 0; i < slideItmes.length; i++) {
+      slideItmes[i].setAttribute('class', 'merry-slide');
+    }
+
+    TweenMax.set('.merry-slide', {
+      width: 100 / slideCount + '%'
+    });
   }
 }
