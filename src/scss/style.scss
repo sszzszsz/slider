@@ -26,6 +26,7 @@
 	&-dot {
 		display: inline-block;
 		padding: 0 5px;
+		cursor: pointer;
 
 		button {
 			padding: 0;
@@ -35,7 +36,12 @@
 			background: none;
       padding: 5px;
       background: #555;
-      border-radius: 50%;
+			border-radius: 50%;
+			cursor: pointer;
+		}
+
+		&-active {
+			opacity: 0.5;
 		}
 	}
 
@@ -49,6 +55,7 @@
 		display: inline-block;
 		position: absolute;
 		transform: translateY(-50%);
+		z-index: 2;
 
 		button {
 			padding: 0;
@@ -57,6 +64,7 @@
 			border: none;
 			background: none;
 			padding: 5px;
+			cursor: pointer;
 
 			&:before {
 				content: '';
