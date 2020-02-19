@@ -23,6 +23,8 @@ export default class MerryGoRound {
     this.setArrow()
     // スライダーの設定
     this.setSlider()
+    // イベントハンドラーの登録
+    this.setEventListener()
   }
 
   /*------------------------------
@@ -78,7 +80,6 @@ export default class MerryGoRound {
         DotWrap.appendChild(newDot);
       }
     }
-    console.log(this.DotWrap)
   }
 
   /*------------------------------
@@ -133,6 +134,35 @@ export default class MerryGoRound {
 
     //初期表示時にアクティブなスライドにクラス付与
     this.setActive(this.count - 1)
+  }
+
+  /*------------------------------
+  * スライドする枚数の設定
+  * countが指定してあればその枚数、指定がなければ1枚
+  ------------------------------*/
+  setEventListener() {
+    let indicatorBtn = document.querySelectorAll('.merry-dot')
+    let arrowBtn = document.querySelectorAll('.merry-arrow')
+
+    //クラスで取得した要素にイベントを登録する
+    function setEventEachEl(elArray, event, func) {
+      for (let i = 0; i < elArray.length; i++) {
+        elArray[i].addEventListener(event, func, false);
+      }
+    }
+
+    //インジケーターをクリックした時に実行
+    let indicatorcClickEvent = function () {
+      console.log('indicatorcClickEvent!')
+    }
+
+    //左右矢印をクリックした時に実行
+    let arrowClickEvent  = function () {
+      console.log('arrowClickEvent!')
+    }
+    setEventEachEl(indicatorBtn, 'click', indicatorcClickEvent)
+    setEventEachEl(arrowBtn, 'click', arrowClickEvent)
+
   }
 
   /*------------------------------
