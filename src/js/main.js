@@ -12,5 +12,5 @@ let Slider1 = new MerryGoRound({
 	indicator: true,
 	arrow: true,
 	count: 1,
-	slideSpeed: 3000
+	slideSpeed: 0.5
 });

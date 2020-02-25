@@ -6,7 +6,7 @@ const og_type = 'website';
 const twitter_card = 'summary_large_image';
 const twitter_site = '@';
 const title = {
-	'home': 'TOPページのタイトル',
+	'home': 'MerryGoRound',
 	'page': '下層ページのタイトル'
 };
 const description = {
