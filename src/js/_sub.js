@@ -172,10 +172,18 @@ export default class MerryGoRound {
       console.log('indicatorcClickEvent!')
       let clickBtn = e.target
       let clickBtnP = clickBtn.tagName == 'LI' ? clickBtn : clickBtn.parentElement
-      let nextSlideNem = Number(clickBtnP.attributes['data-dot']["value"])
+      let nextSlideNem = Number(clickBtnP.attributes['data-dot']["value"]) - 1
       _this.getActive()
 
-      if (_this.currentActiveNum < nextSlideNem) { }
+      if (_this.currentActiveNum < nextSlideNem) {
+        let slideDistance = nextSlideNem - _this.currentActiveNum
+        _this.setActive(nextSlideNem)
+        _this.doSlide('next', slideDistance)
+      } else if (_this.currentActiveNum > nextSlideNem) {
+        let slideDistance = _this.currentActiveNum - nextSlideNem
+        _this.setActive(nextSlideNem)
+        _this.doSlide('prev', slideDistance)
+      }
     }
 
     //左右矢印をクリックした時に実行
@@ -188,12 +196,12 @@ export default class MerryGoRound {
         //アクティブ状態の変更
         _this.setActive(_this.currentActiveNum + 1)
         //スライドアニメーション
-        _this.doSlide('next')
+        _this.doSlide('next', 1)
       } else if (clickBtnP.className.indexOf('prev') > -1) {
         //アクティブ状態の変更
         _this.setActive(_this.currentActiveNum - 1)
         //スライドアニメーション
-        _this.doSlide('prev')
+        _this.doSlide('prev', 1)
       }
     }
 
@@ -246,7 +254,7 @@ export default class MerryGoRound {
   * スライドアニメーション
   * @param {String} direction
   ------------------------------*/
-  doSlide(direction) {
+  doSlide(direction, count) {
     let slideDirection
     let winW = document.body.clientWidth
     let sliderCurrentPos = document.querySelectorAll('#slider')[0].style.transform
@@ -261,9 +269,10 @@ export default class MerryGoRound {
     console.log('this.currentActiveNum', this.currentActiveNum)
 
     if (direction == 'next') {
-      slideDirection = sliderCurrentPos - this.count * winW
+      //スライドする量 = 今のtransformX - スライドするスライドの枚数×(画面幅÷画面内に表示されているスライドの枚数)
+      slideDirection = sliderCurrentPos - count * winW / this.count
     } else if (direction == 'prev') {
-      slideDirection = sliderCurrentPos + this.count * winW
+      slideDirection = sliderCurrentPos + count * winW / this.count
     }
     TweenMax.to(this.elId, this.slideSpeed, {
       x: slideDirection
