@@ -1,11 +1,9 @@
-import Test = require('./_test');
+import Test = require("./_test");
 
 $(function() {
-
   const init = function() {
-    console.log('init page');
+    console.log("init page");
   };
 
   init();
-
 });

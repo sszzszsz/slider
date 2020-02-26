@@ -1,8 +1,8 @@
 {
-	"compilerOptions": {
-		"sourceMap": true,
-		"target": "ES5",
-		"module": "commonjs",
-		"moduleResolution": "node"
-	}
+  "compilerOptions": {
+    "sourceMap": true,
+    "target": "ES5",
+    "module": "commonjs",
+    "moduleResolution": "node"
+  }
 }

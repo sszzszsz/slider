@@ -175,7 +175,7 @@ export default class MerryGoRound {
       let nextSlideNem = Number(clickBtnP.attributes['data-dot']["value"])
       _this.getActive()
 
-      if(_this.currentActiveNum < nextSlideNem){}
+      if (_this.currentActiveNum < nextSlideNem) { }
     }
 
     //左右矢印をクリックした時に実行
