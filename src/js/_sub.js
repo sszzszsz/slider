@@ -58,7 +58,7 @@ export default class MerryGoRound {
 
   /*------------------------------
   * sliderの初期設定
-  * 
+  *
   ------------------------------*/
   setSlideStyle() {
     let list = document.querySelector(this.elId);
