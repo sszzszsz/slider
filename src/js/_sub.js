@@ -135,7 +135,6 @@ export default class MerryGoRound {
   ------------------------------*/
   setSlider() {
     let slideItmes = this.slider.children;
-    console.log(slideItmes)
 
     //各スライドに共通クラス、データ属性付与
     for (let i = 0; i < slideItmes.length; i++) {
@@ -148,7 +147,7 @@ export default class MerryGoRound {
     });
 
     //初期表示時にアクティブなスライドにクラス付与
-    this.setActive(this.count - 1)
+    this.setActive(this.count)
   }
 
   /*------------------------------
@@ -193,15 +192,22 @@ export default class MerryGoRound {
       _this.getActive()
 
       if (clickBtnP.className.indexOf('next') > -1) {
-        //アクティブ状態の変更
-        _this.setActive(_this.currentActiveNum + 1)
-        //スライドアニメーション
-        _this.doSlide('next', 1)
+        //次のスライドがある場合
+        if (_this.currentActiveNum < _this.itemLen) {
+          _this.setActive(_this.currentActiveNum + 1)
+          _this.doSlide('next', 1)
+        } else {
+          _this.doLoopAnmate('next')
+        }
       } else if (clickBtnP.className.indexOf('prev') > -1) {
-        //アクティブ状態の変更
-        _this.setActive(_this.currentActiveNum - 1)
-        //スライドアニメーション
-        _this.doSlide('prev', 1)
+        if (_this.currentActiveNum > 0) {
+          //アクティブ状態の変更
+          _this.setActive(_this.currentActiveNum)
+          //スライドアニメーション
+          _this.doSlide('prev', 1)
+        } else if (_this.currentActiveNum <= 0) {
+          _this.doLoopAnmate('prev')
+        }
       }
     }
 
@@ -218,8 +224,19 @@ export default class MerryGoRound {
     let slideItmes = document.querySelectorAll(`${this.wrapId} .merry-slide`)
     let dotItems = document.querySelectorAll(`${this.wrapId} .merry-dot`)
     this.removeActive()
-    slideItmes[activeNum].classList.add('merry-slide-active')
-    dotItems[activeNum].classList.add('merry-dot-active')
+
+    for (let i = 0; i < slideItmes.length; i++) {
+      if (Number(slideItmes[i].attributes['data-slide']['value']) == activeNum) {
+        slideItmes[i].classList.add('merry-slide-active')
+      }
+
+    }
+    for (let i = 0; i < dotItems.length; i++) {
+      if (Number(dotItems[i].attributes['data-dot']['value']) == activeNum) {
+        dotItems[i].classList.add('merry-dot-active')
+      }
+
+    }
   }
 
   /*------------------------------
@@ -228,7 +245,7 @@ export default class MerryGoRound {
   ------------------------------*/
   getActive() {
     let currentActiveSlide = document.querySelectorAll(`${this.wrapId} .merry-slide-active`)
-    this.currentActiveNum = Number(currentActiveSlide[0].attributes["data-slide"]["value"]) - 1
+    this.currentActiveNum = Number(currentActiveSlide[0].attributes['data-slide']['value'])
     return this.currentActiveNum
   }
 
@@ -254,9 +271,9 @@ export default class MerryGoRound {
   * スライドアニメーション
   * @param {String} direction
   ------------------------------*/
-  doSlide(direction, count) {
+  doSlide(direction, count, callBack) {
     let slideDirection
-    let winW = document.body.clientWidth
+    this.winW = document.body.clientWidth
     let sliderCurrentPos = document.querySelectorAll('#slider')[0].style.transform
     if (sliderCurrentPos == '') {
       sliderCurrentPos = 0
@@ -270,12 +287,61 @@ export default class MerryGoRound {
 
     if (direction == 'next') {
       //スライドする量 = 今のtransformX - スライドするスライドの枚数×(画面幅÷画面内に表示されているスライドの枚数)
-      slideDirection = sliderCurrentPos - count * winW / this.count
+      slideDirection = sliderCurrentPos - count * this.winW / this.count
     } else if (direction == 'prev') {
-      slideDirection = sliderCurrentPos + count * winW / this.count
+      slideDirection = sliderCurrentPos + count * this.winW / this.count
     }
     TweenMax.to(this.elId, this.slideSpeed, {
-      x: slideDirection
+      x: slideDirection,
+      onComplete: callBack
     });
+  }
+
+  /*------------------------------
+  * ループアニメーション
+  * @param {String} direction
+  ------------------------------*/
+  doLoopAnmate(direction) {
+    console.log('行き過ぎ')
+    let _this = this
+
+    let resetSlidePos = function () {
+      // _this.copySlide()
+
+      let slidePos = direction == 'next' ? 0 : (_this.itemLen - 1) * -_this.winW / _this.count
+      TweenMax.set(_this.elId, {
+        x: slidePos,
+        onComplete: function () {
+          _this.getActive()
+          //スライドの枚数と同じだった場合最初に戻る
+          if (_this.currentActiveNum == _this.itemLen) {
+            _this.setActive(1)
+          } else if (_this.currentActiveNum <= 0) {
+            _this.setActive(_this.itemLen)
+          }
+
+        }
+      })
+    }
+
+
+    if (direction == 'next') {
+      this.doSlide('next', 1, resetSlidePos)
+    } else if (direction == 'prev') {
+      this.doSlide('prev', 1, resetSlidePos)
+    }
+
+  }
+
+  /*------------------------------
+  * ループアニメーション
+  * @param {String} direction
+  ------------------------------*/
+  copySlide() {
+    let firstSlideHtml = this.slider.firstElementChild.outerHTML
+    let lastSlideHtml = this.slider.lastElementChild.outerHTML
+    this.slider.insertAdjacentHTML('beforeend', firstSlideHtml)
+    this.slider.insertAdjacentHTML('afterbegin', lastSlideHtml)
+
   }
 }
