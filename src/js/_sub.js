@@ -69,6 +69,12 @@ export default class MerryGoRound {
     this.cont = document.querySelector(this.elId).parentElement
     this.slider = document.querySelector(this.elId)
     this.itemLen = this.slider.childElementCount
+
+    //オリジナルの状態を複製しておく
+    this.originalHtml = []
+    for (let i = 0; i < this.itemLen; i++) {
+      this.originalHtml[i] = this.slider.children[i].outerHTML
+    }
   }
 
   /*------------------------------
@@ -142,12 +148,26 @@ export default class MerryGoRound {
       slideItmes[i].setAttribute('data-slide', i + 1);
     }
 
+    //初期表示時にアクティブなスライドにクラス付与
+    this.setActive(this.count)
+
+    //最初と最後のスライドを無限ループ用に複製する
+    let firstSlide = this.originalHtml[0]
+    this.slider.insertAdjacentHTML('beforeend', firstSlide)
+    this.slider.lastElementChild.classList.add('merry-slide-copy')
+    this.slider.lastElementChild.style.width = 100 / this.count + '%'
+
+    let lastSlide = this.originalHtml[this.itemLen - 1]
+    this.slider.insertAdjacentHTML('afterbegin', lastSlide)
+    this.slider.firstElementChild.classList.add('merry-slide-copy')
+    this.slider.firstElementChild.style.width = 100 / this.count + '%'
+    this.slider.firstElementChild.style.position = 'absolute'
+    this.slider.firstElementChild.style.left = 100 / -this.count + '%'
+
+
     TweenMax.set('.merry-slide', {
       width: 100 / this.count + '%'
     });
-
-    //初期表示時にアクティブなスライドにクラス付与
-    this.setActive(this.count)
   }
 
   /*------------------------------
@@ -171,7 +191,7 @@ export default class MerryGoRound {
       console.log('indicatorcClickEvent!')
       let clickBtn = e.target
       let clickBtnP = clickBtn.tagName == 'LI' ? clickBtn : clickBtn.parentElement
-      let nextSlideNem = Number(clickBtnP.attributes['data-dot']["value"]) - 1
+      let nextSlideNem = Number(clickBtnP.attributes['data-dot']["value"])
       _this.getActive()
 
       if (_this.currentActiveNum < nextSlideNem) {
@@ -193,6 +213,7 @@ export default class MerryGoRound {
 
       if (clickBtnP.className.indexOf('next') > -1) {
         //次のスライドがある場合
+        //無い場合ループするように見せかける処理
         if (_this.currentActiveNum < _this.itemLen) {
           _this.setActive(_this.currentActiveNum + 1)
           _this.doSlide('next', 1)
@@ -200,12 +221,12 @@ export default class MerryGoRound {
           _this.doLoopAnmate('next')
         }
       } else if (clickBtnP.className.indexOf('prev') > -1) {
-        if (_this.currentActiveNum > 0) {
-          //アクティブ状態の変更
-          _this.setActive(_this.currentActiveNum)
-          //スライドアニメーション
+        //前のスライドがある場合
+        //無い場合ループするように見せかける処理
+        if (_this.currentActiveNum > 1) {
+          _this.setActive(_this.currentActiveNum - 1)
           _this.doSlide('prev', 1)
-        } else if (_this.currentActiveNum <= 0) {
+        } else if (_this.currentActiveNum <= 1) {
           _this.doLoopAnmate('prev')
         }
       }
@@ -223,6 +244,7 @@ export default class MerryGoRound {
   setActive(activeNum) {
     let slideItmes = document.querySelectorAll(`${this.wrapId} .merry-slide`)
     let dotItems = document.querySelectorAll(`${this.wrapId} .merry-dot`)
+    //現在のactiveを削除
     this.removeActive()
 
     for (let i = 0; i < slideItmes.length; i++) {
@@ -306,17 +328,17 @@ export default class MerryGoRound {
     let _this = this
 
     let resetSlidePos = function () {
-      // _this.copySlide()
-
       let slidePos = direction == 'next' ? 0 : (_this.itemLen - 1) * -_this.winW / _this.count
       TweenMax.set(_this.elId, {
         x: slidePos,
         onComplete: function () {
           _this.getActive()
-          //スライドの枚数と同じだった場合最初に戻る
+
           if (_this.currentActiveNum == _this.itemLen) {
+            //スライドの枚数と同じだった場合最初に戻る
             _this.setActive(1)
-          } else if (_this.currentActiveNum <= 0) {
+          } else if (_this.currentActiveNum <= 1) {
+            //スライドの枚数と同じだった場合最初に戻る
             _this.setActive(_this.itemLen)
           }
 
@@ -330,18 +352,5 @@ export default class MerryGoRound {
     } else if (direction == 'prev') {
       this.doSlide('prev', 1, resetSlidePos)
     }
-
-  }
-
-  /*------------------------------
-  * ループアニメーション
-  * @param {String} direction
-  ------------------------------*/
-  copySlide() {
-    let firstSlideHtml = this.slider.firstElementChild.outerHTML
-    let lastSlideHtml = this.slider.lastElementChild.outerHTML
-    this.slider.insertAdjacentHTML('beforeend', firstSlideHtml)
-    this.slider.insertAdjacentHTML('afterbegin', lastSlideHtml)
-
   }
 }

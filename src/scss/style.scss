@@ -10,6 +10,7 @@
     overflow: hidden;
   }
   &-slider {
+    position: relative;
     font-size: 0;
     word-break: keep-all;
     white-space: nowrap;
@@ -90,7 +91,8 @@
     }
   }
 
-  &-slide {
+  &-slide,
+  &-slide-copy {
     & > * {
       width: 100%;
     }
