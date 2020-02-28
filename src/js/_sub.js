@@ -192,7 +192,7 @@ export default class MerryGoRound {
       let clickBtn = e.target
       let clickBtnP = clickBtn.tagName == 'LI' ? clickBtn : clickBtn.parentElement
       let nextSlideNem = Number(clickBtnP.attributes['data-dot']["value"])
-      _this.getActive()
+      _this.getCurrentActive()
 
       if (_this.currentActiveNum < nextSlideNem) {
         let slideDistance = nextSlideNem - _this.currentActiveNum
@@ -209,15 +209,25 @@ export default class MerryGoRound {
     function arrowClickEvent(e) {
       let clickBtn = e.target
       let clickBtnP = clickBtn.offsetParent
-      _this.getActive()
+      _this.getCurrentActive()
 
       if (clickBtnP.className.indexOf('next') > -1) {
         //次のスライドがある場合
         //無い場合ループするように見せかける処理
         if (_this.currentActiveNum < _this.itemLen) {
+          //アニメーション中だった場合現在のアニメーションを終了させる
+          if (TweenMax.isTweening(_this.elId) == true) {
+            _this.tween.seek(_this.slideSpeed)
+            console.log('アニメーションすっ飛ばし')
+          }
           _this.setActive(_this.currentActiveNum + 1)
           _this.doSlide('next', 1)
         } else {
+          //アニメーション中だった場合現在のアニメーションを終了させる
+          if (TweenMax.isTweening(_this.elId) == true) {
+            _this.tween.seek(_this.slideSpeed)
+            console.log('アニメーションすっ飛ばし')
+          }
           _this.doLoopAnmate('next')
         }
       } else if (clickBtnP.className.indexOf('prev') > -1) {
@@ -230,6 +240,7 @@ export default class MerryGoRound {
           _this.doLoopAnmate('prev')
         }
       }
+
     }
 
     setEventEachEl(indicatorBtn, 'click', indicatorcClickEvent)
@@ -265,7 +276,7 @@ export default class MerryGoRound {
   * アクティブ要素の取得
   * @return {Number} currentActiveNum
   ------------------------------*/
-  getActive() {
+  getCurrentActive() {
     let currentActiveSlide = document.querySelectorAll(`${this.wrapId} .merry-slide-active`)
     this.currentActiveNum = Number(currentActiveSlide[0].attributes['data-slide']['value'])
     return this.currentActiveNum
@@ -304,16 +315,14 @@ export default class MerryGoRound {
       sliderCurrentPos = Number(sliderCurrentPos.replace('matrix(', '').replace(')', '').split(',')[4])
     }
 
-    console.log('sliderCurrentPos', sliderCurrentPos)
-    console.log('this.currentActiveNum', this.currentActiveNum)
-
     if (direction == 'next') {
       //スライドする量 = 今のtransformX - スライドするスライドの枚数×(画面幅÷画面内に表示されているスライドの枚数)
       slideDirection = sliderCurrentPos - count * this.winW / this.count
     } else if (direction == 'prev') {
       slideDirection = sliderCurrentPos + count * this.winW / this.count
     }
-    TweenMax.to(this.elId, this.slideSpeed, {
+
+    this.tween = TweenMax.to(this.elId, this.slideSpeed, {
       x: slideDirection,
       onComplete: callBack
     });
@@ -327,30 +336,21 @@ export default class MerryGoRound {
     console.log('行き過ぎ')
     let _this = this
 
-    let resetSlidePos = function () {
+    function resetSlidePos() {
       let slidePos = direction == 'next' ? 0 : (_this.itemLen - 1) * -_this.winW / _this.count
       TweenMax.set(_this.elId, {
         x: slidePos,
         onComplete: function () {
-          _this.getActive()
-
-          if (_this.currentActiveNum == _this.itemLen) {
-            //スライドの枚数と同じだった場合最初に戻る
-            _this.setActive(1)
-          } else if (_this.currentActiveNum <= 1) {
-            //スライドの枚数と同じだった場合最初に戻る
-            _this.setActive(_this.itemLen)
-          }
-
         }
       })
     }
 
-
     if (direction == 'next') {
       this.doSlide('next', 1, resetSlidePos)
+      _this.setActive(1)
     } else if (direction == 'prev') {
       this.doSlide('prev', 1, resetSlidePos)
+      _this.setActive(_this.itemLen)
     }
   }
 }
