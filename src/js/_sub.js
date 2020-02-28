@@ -1,15 +1,16 @@
 export default class MerryGoRound {
 
   constructor(option) {
-    this.elId = option.el;
+    this.elId = option.el
     this.elIdStr = option.el.replace('#', '')
     this.wrapId = option.el + '_wrap'
-    this.indicator = option.indicator;
-    this.arrow = option.arrow;
-    this.count = option.count > 0 ? option.count : 1;
-    this.slideSpeed = option.slideSpeed;
+    this.indicator = option.indicator
+    this.arrow = option.arrow
+    this.autoSlide = option.auto == true ? option.auto : false
+    this.count = option.count > 0 ? option.count : 1
+    this.slideSpeed = option.slideSpeed
 
-    this.init();
+    this.init()
   }
 
   init() {
@@ -20,8 +21,10 @@ export default class MerryGoRound {
     this.setArrow()
     // スライダーの設定
     this.setSlider()
-    // イベントハンドラーの登録
-    this.setEventListener()
+    // クリックイベントの登録
+    this.setClickEventListener()
+
+    this.setFlickEventListener()
   }
 
   /*------------------------------
@@ -166,10 +169,10 @@ export default class MerryGoRound {
   }
 
   /*------------------------------
-  * スライドする枚数の設定
-  * countが指定してあればその枚数、指定がなければ1枚
+  * クリックイベントの付与
+  * 左右矢印とインジケーターにクリックイベントを付与する
   ------------------------------*/
-  setEventListener() {
+  setClickEventListener() {
     let _this = this
     let indicatorBtn = document.querySelectorAll(`${this.wrapId} .merry-dot`)
     let arrowBtn = document.querySelectorAll(`${this.wrapId} .merry-arrow`)
@@ -191,10 +194,14 @@ export default class MerryGoRound {
 
       if (_this.currentActiveNum < nextSlideNem) {
         let slideDistance = nextSlideNem - _this.currentActiveNum
+        //アニメーション中だった場合現在のアニメーションを終了させる
+        _this.skipAnimation()
         _this.setActive(nextSlideNem)
         _this.doSlide('next', slideDistance)
       } else if (_this.currentActiveNum > nextSlideNem) {
         let slideDistance = _this.currentActiveNum - nextSlideNem
+        //アニメーション中だった場合現在のアニメーションを終了させる
+        _this.skipAnimation()
         _this.setActive(nextSlideNem)
         _this.doSlide('prev', slideDistance)
       }
@@ -211,27 +218,25 @@ export default class MerryGoRound {
         //無い場合ループするように見せかける処理
         if (_this.currentActiveNum < _this.itemLen) {
           //アニメーション中だった場合現在のアニメーションを終了させる
-          if (TweenMax.isTweening(_this.elId) == true) {
-            _this.tween.seek(_this.slideSpeed)
-            console.log('アニメーションすっ飛ばし')
-          }
+          _this.skipAnimation()
           _this.setActive(_this.currentActiveNum + 1)
           _this.doSlide('next', 1)
         } else {
           //アニメーション中だった場合現在のアニメーションを終了させる
-          if (TweenMax.isTweening(_this.elId) == true) {
-            _this.tween.seek(_this.slideSpeed)
-            console.log('アニメーションすっ飛ばし')
-          }
+          _this.skipAnimation()
           _this.doLoopAnmate('next')
         }
       } else if (clickBtnP.className.indexOf('prev') > -1) {
         //前のスライドがある場合
         //無い場合ループするように見せかける処理
         if (_this.currentActiveNum > 1) {
+          //アニメーション中だった場合現在のアニメーションを終了させる
+          _this.skipAnimation()
           _this.setActive(_this.currentActiveNum - 1)
           _this.doSlide('prev', 1)
         } else if (_this.currentActiveNum <= 1) {
+          //アニメーション中だった場合現在のアニメーションを終了させる
+          _this.skipAnimation()
           _this.doLoopAnmate('prev')
         }
       }
@@ -241,6 +246,86 @@ export default class MerryGoRound {
     setEventEachEl(indicatorBtn, 'click', indicatorcClickEvent)
     setEventEachEl(arrowBtn, 'click', arrowClickEvent)
 
+  }
+
+  /*------------------------------
+  * フリックイベントの付与
+  * スライダー部分にフリックイベントを付与する
+  ------------------------------*/
+  setFlickEventListener() {
+    let eventStartX, eventStartY, eventMoveX, eventMoveY
+    let _this = this
+    let flickFlag = false
+
+    /*------------------------------
+    * マウスダウン＆タッチスタート時の位置を取得
+    ------------------------------*/
+    this.slider.addEventListener('touchstart', eventStart, false)
+    this.slider.addEventListener('mousedown', eventStart, false)
+
+    function eventStart(event) {
+      event.preventDefault()
+      flickFlag = true
+      if (event.touches == undefined) {
+        eventStartX = event.pageX
+        eventStartY = event.pageY
+      } else {
+        eventStartX = event.touches[0].pageX
+        eventStartY = event.touches[0].pageY
+      }
+    }
+
+    /*------------------------------
+    * マウス＆タッチが移動した位置を取得
+    ------------------------------*/
+    this.slider.addEventListener('touchmove', eventMove, false)
+    this.slider.addEventListener('mousemove', eventMove, false)
+
+    function eventMove(event) {
+      if (flickFlag) {
+        event.preventDefault()
+        if (event.touches == undefined) {
+          eventMoveX = event.pageX
+          eventMoveY = event.pageY
+        } else {
+          eventMoveX = event.changedTouches[0].pageX
+          eventMoveY = event.changedTouches[0].pageY
+        }
+      }
+    }
+
+    /*------------------------------
+    * マウス＆タッチが終了
+    ------------------------------*/
+    this.slider.addEventListener('touchend', eventEnd, false)
+    this.slider.addEventListener('mouseup', eventEnd, false)
+
+    function eventEnd() {
+      _this.getCurrentActive()
+      if (eventStartX > eventMoveX && eventStartX > (eventMoveX + 50)) {
+        console.log('右から左にマウスが移動')
+        if (_this.currentActiveNum < _this.itemLen) {
+          _this.skipAnimation()
+          _this.setActive(_this.currentActiveNum + 1)
+          _this.doSlide('next', 1)
+        } else {
+          _this.skipAnimation()
+          _this.doLoopAnmate('next')
+        }
+      } else if (eventStartX < eventMoveX && (eventStartX + 50) < eventMoveX) {
+        console.log('左から右にマウスが移動')
+        if (_this.currentActiveNum > 1) {
+          _this.skipAnimation()
+          _this.setActive(_this.currentActiveNum - 1)
+          _this.doSlide('prev', 1)
+        } else if (_this.currentActiveNum <= 1) {
+          _this.skipAnimation()
+          _this.doLoopAnmate('prev')
+        }
+      }
+
+      flickFlag = false
+    }
   }
 
   /*------------------------------
@@ -346,6 +431,16 @@ export default class MerryGoRound {
     } else if (direction == 'prev') {
       this.doSlide('prev', 1, resetSlidePos)
       _this.setActive(_this.itemLen)
+    }
+  }
+
+  /*------------------------------
+  * アニメーション中断
+  ------------------------------*/
+  skipAnimation() {
+    if (TweenMax.isTweening(this.elId) == true) {
+      this.tween.seek(this.slideSpeed)
+      console.log('アニメーションすっ飛ばし')
     }
   }
 }
