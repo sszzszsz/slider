@@ -3,7 +3,9 @@
 @import "./setting/reset";
 @import "./setting/config";
 @import "./setting/function";
-
+.test {
+  margin-bottom: 100px;
+}
 .merry {
   &-wrap {
     position: relative;
