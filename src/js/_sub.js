@@ -6,7 +6,7 @@ export default class MerryGoRound {
     this.wrapId = option.el + '_wrap'
     this.indicator = option.indicator
     this.arrow = option.arrow
-    this.autoSlide = option.auto == true ? option.auto : false
+    this.autoSlide = option.auto >= 0 ? option.auto : false
     this.count = option.count > 0 ? option.count : 1
     this.slideSpeed = option.slideSpeed
 
@@ -14,6 +14,7 @@ export default class MerryGoRound {
   }
 
   init() {
+    //スライダーを横並びにする
     this.setSlideStyle()
     // インジケーターの設定
     this.setIndicator()
@@ -23,8 +24,14 @@ export default class MerryGoRound {
     this.setSlider()
     // クリックイベントの登録
     this.setClickEventListener()
-
+    // フリックイベントの登録
     this.setFlickEventListener()
+
+    // 自動スライドの設定
+    // option.autoに数字の指定があった場合、自動スライドする
+    if (this.autoSlide > 0) {
+      this.autoSlideAnimation()
+    }
   }
 
   /*------------------------------
@@ -442,5 +449,30 @@ export default class MerryGoRound {
       this.tween.seek(this.slideSpeed)
       console.log('アニメーションすっ飛ばし')
     }
+  }
+
+  /*------------------------------
+  * 自動アニメーション
+  ------------------------------*/
+  autoSlideAnimation() {
+    let _this = this
+    let timeOut = this.autoSlide * 1000
+
+    let setIntervalId = setInterval(() => {
+      _this.getCurrentActive()
+      //次のスライドがある場合
+      //無い場合ループするように見せかける処理
+      if (_this.currentActiveNum < _this.itemLen) {
+        //アニメーション中だった場合現在のアニメーションを終了させる
+        _this.skipAnimation()
+        _this.setActive(_this.currentActiveNum + 1)
+        _this.doSlide('next', 1)
+      } else {
+        //アニメーション中だった場合現在のアニメーションを終了させる
+        _this.skipAnimation()
+        _this.doLoopAnmate('next')
+      }
+    }, timeOut);
+
   }
 }
