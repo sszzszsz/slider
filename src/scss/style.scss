@@ -58,7 +58,7 @@
     display: inline-block;
     position: absolute;
     transform: translateY(-50%);
-    z-index: 2;
+    z-index: 100;
 
     button {
       padding: 0;
@@ -97,6 +97,21 @@
   &-slide-copy {
     & > * {
       width: 100%;
+    }
+  }
+
+  &-fade {
+    .merry-slider {
+
+    }
+    .merry-slide {
+      position: absolute;
+      display: block;
+      top: 0;
+
+      &-active {
+        position: relative;
+      }
     }
   }
 }
