@@ -31,6 +31,7 @@ export default class MerryGoRound {
     // option.autoに数字の指定があった場合、自動スライドする
     if (this.autoSlide > 0) {
       this.autoSlideAnimation()
+      this.hoverAutoSlideAnimation()
     }
   }
 
@@ -196,7 +197,7 @@ export default class MerryGoRound {
       console.log('indicatorcClickEvent!')
       let clickBtn = e.target
       let clickBtnP = clickBtn.tagName == 'LI' ? clickBtn : clickBtn.parentElement
-      let nextSlideNem = Number(clickBtnP.attributes['data-dot']["value"])
+      let nextSlideNum = Number(clickBtnP.attributes['data-dot']["value"])
 
       //現在のカレント表示を取得
       _this.getCurrentActive()
@@ -208,16 +209,15 @@ export default class MerryGoRound {
       //再自動スライド開始する
       if (_this.autoSlide > 0) {
         _this.stopAutoSlideAnimation()
-        _this.autoSlideAnimation()
       }
 
-      if (_this.currentActiveNum < nextSlideNem) {
-        let slideDistance = nextSlideNem - _this.currentActiveNum
-        _this.setActive(nextSlideNem)
+      if (_this.currentActiveNum < nextSlideNum) {
+        let slideDistance = nextSlideNum - _this.currentActiveNum
+        _this.setActive(nextSlideNum)
         _this.doSlide('next', slideDistance)
-      } else if (_this.currentActiveNum > nextSlideNem) {
-        let slideDistance = _this.currentActiveNum - nextSlideNem
-        _this.setActive(nextSlideNem)
+      } else if (_this.currentActiveNum > nextSlideNum) {
+        let slideDistance = _this.currentActiveNum - nextSlideNum
+        _this.setActive(nextSlideNum)
         _this.doSlide('prev', slideDistance)
       }
     }
@@ -237,7 +237,6 @@ export default class MerryGoRound {
       //再自動スライド開始する
       if (_this.autoSlide > 0) {
         _this.stopAutoSlideAnimation()
-        _this.autoSlideAnimation()
       }
 
       if (clickBtnP.className.indexOf('next') > -1) {
@@ -467,7 +466,7 @@ export default class MerryGoRound {
   ------------------------------*/
   autoSlideAnimation() {
     let _this = this
-    let timeOut = this.autoSlide * 1000
+    let timeOut = this.autoSlide * 1000 + this.slideSpeed * 1000
 
     this.setIntervalId = setInterval(() => {
       _this.getCurrentActive()
@@ -480,8 +479,6 @@ export default class MerryGoRound {
         _this.doLoopAnmate('next')
       }
     }, timeOut);
-
-    this.hoverAutoSlideAnimation()
   }
 
   /*------------------------------
@@ -490,7 +487,6 @@ export default class MerryGoRound {
   stopAutoSlideAnimation() {
     if (this.setIntervalId != null) {
       clearInterval(this.setIntervalId)
-      console.log('clearInterval')
       this.setIntervalId = null
     }
   }
@@ -504,9 +500,11 @@ export default class MerryGoRound {
     this.cont.addEventListener('mouseleave', clearHoverEvent, { passive: false })
 
     function setHoverEvent() {
+      console.log('setHoverEvent')
       _this.stopAutoSlideAnimation()
     }
     function clearHoverEvent() {
+      console.log('clearHoverEvent')
       _this.autoSlideAnimation()
     }
   }
