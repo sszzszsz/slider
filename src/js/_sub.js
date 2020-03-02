@@ -197,18 +197,26 @@ export default class MerryGoRound {
       let clickBtn = e.target
       let clickBtnP = clickBtn.tagName == 'LI' ? clickBtn : clickBtn.parentElement
       let nextSlideNem = Number(clickBtnP.attributes['data-dot']["value"])
+
+      //現在のカレント表示を取得
       _this.getCurrentActive()
+
+      //アニメーション中だった場合現在のアニメーションを終了させる
+      _this.skipAnimation()
+
+      //自動でスライド中の場合のアニメーションを終了させてから
+      //再自動スライド開始する
+      if (_this.autoSlide > 0) {
+        _this.stopAutoSlideAnimation()
+        _this.autoSlideAnimation()
+      }
 
       if (_this.currentActiveNum < nextSlideNem) {
         let slideDistance = nextSlideNem - _this.currentActiveNum
-        //アニメーション中だった場合現在のアニメーションを終了させる
-        _this.skipAnimation()
         _this.setActive(nextSlideNem)
         _this.doSlide('next', slideDistance)
       } else if (_this.currentActiveNum > nextSlideNem) {
         let slideDistance = _this.currentActiveNum - nextSlideNem
-        //アニメーション中だった場合現在のアニメーションを終了させる
-        _this.skipAnimation()
         _this.setActive(nextSlideNem)
         _this.doSlide('prev', slideDistance)
       }
@@ -218,36 +226,39 @@ export default class MerryGoRound {
     function arrowClickEvent(e) {
       let clickBtn = e.target
       let clickBtnP = clickBtn.offsetParent
+
+      //現在のカレント表示を取得
       _this.getCurrentActive()
+
+      //アニメーション中だった場合現在のアニメーションを終了させる
+      _this.skipAnimation()
+
+      //自動でスライド中の場合のアニメーションを終了させてから
+      //再自動スライド開始する
+      if (_this.autoSlide > 0) {
+        _this.stopAutoSlideAnimation()
+        _this.autoSlideAnimation()
+      }
 
       if (clickBtnP.className.indexOf('next') > -1) {
         //次のスライドがある場合
         //無い場合ループするように見せかける処理
         if (_this.currentActiveNum < _this.itemLen) {
-          //アニメーション中だった場合現在のアニメーションを終了させる
-          _this.skipAnimation()
           _this.setActive(_this.currentActiveNum + 1)
           _this.doSlide('next', 1)
         } else {
-          //アニメーション中だった場合現在のアニメーションを終了させる
-          _this.skipAnimation()
           _this.doLoopAnmate('next')
         }
       } else if (clickBtnP.className.indexOf('prev') > -1) {
         //前のスライドがある場合
         //無い場合ループするように見せかける処理
         if (_this.currentActiveNum > 1) {
-          //アニメーション中だった場合現在のアニメーションを終了させる
-          _this.skipAnimation()
           _this.setActive(_this.currentActiveNum - 1)
           _this.doSlide('prev', 1)
         } else if (_this.currentActiveNum <= 1) {
-          //アニメーション中だった場合現在のアニメーションを終了させる
-          _this.skipAnimation()
           _this.doLoopAnmate('prev')
         }
       }
-
     }
 
     setEventEachEl(indicatorBtn, 'click', indicatorcClickEvent)
@@ -267,8 +278,8 @@ export default class MerryGoRound {
     /*------------------------------
     * マウスダウン＆タッチスタート時の位置を取得
     ------------------------------*/
-    this.slider.addEventListener('touchstart', eventStart, false)
-    this.slider.addEventListener('mousedown', eventStart, false)
+    this.slider.addEventListener('touchstart', eventStart, { passive: false })
+    this.slider.addEventListener('mousedown', eventStart, { passive: false })
 
     function eventStart(event) {
       event.preventDefault()
@@ -285,8 +296,8 @@ export default class MerryGoRound {
     /*------------------------------
     * マウス＆タッチが移動した位置を取得
     ------------------------------*/
-    this.slider.addEventListener('touchmove', eventMove, false)
-    this.slider.addEventListener('mousemove', eventMove, false)
+    this.slider.addEventListener('touchmove', eventMove, { passive: false })
+    this.slider.addEventListener('mousemove', eventMove, { passive: false })
 
     function eventMove(event) {
       if (flickFlag) {
@@ -304,8 +315,8 @@ export default class MerryGoRound {
     /*------------------------------
     * マウス＆タッチが終了
     ------------------------------*/
-    this.slider.addEventListener('touchend', eventEnd, false)
-    this.slider.addEventListener('mouseup', eventEnd, false)
+    this.slider.addEventListener('touchend', eventEnd, { passive: false })
+    this.slider.addEventListener('mouseup', eventEnd, { passive: false })
 
     function eventEnd() {
       _this.getCurrentActive()
@@ -458,21 +469,45 @@ export default class MerryGoRound {
     let _this = this
     let timeOut = this.autoSlide * 1000
 
-    let setIntervalId = setInterval(() => {
+    this.setIntervalId = setInterval(() => {
       _this.getCurrentActive()
       //次のスライドがある場合
       //無い場合ループするように見せかける処理
       if (_this.currentActiveNum < _this.itemLen) {
-        //アニメーション中だった場合現在のアニメーションを終了させる
-        _this.skipAnimation()
         _this.setActive(_this.currentActiveNum + 1)
         _this.doSlide('next', 1)
       } else {
-        //アニメーション中だった場合現在のアニメーションを終了させる
-        _this.skipAnimation()
         _this.doLoopAnmate('next')
       }
     }, timeOut);
 
+    this.hoverAutoSlideAnimation()
+  }
+
+  /*------------------------------
+  * 自動アニメーション中止
+  ------------------------------*/
+  stopAutoSlideAnimation() {
+    if (this.setIntervalId != null) {
+      clearInterval(this.setIntervalId)
+      console.log('clearInterval')
+      this.setIntervalId = null
+    }
+  }
+
+  /*------------------------------
+  * ホバーで自動アニメーションを止める
+  ------------------------------*/
+  hoverAutoSlideAnimation() {
+    let _this = this
+    this.cont.addEventListener('mouseenter', setHoverEvent, { passive: false })
+    this.cont.addEventListener('mouseleave', clearHoverEvent, { passive: false })
+
+    function setHoverEvent() {
+      _this.stopAutoSlideAnimation()
+    }
+    function clearHoverEvent() {
+      _this.autoSlideAnimation()
+    }
   }
 }

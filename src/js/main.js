@@ -4,6 +4,6 @@ let Slider1 = new MerryGoRound({
   indicator: true,
   arrow: true,
   count: 1,
-  auto: 3,
+  auto: 5,
   slideSpeed: 1
 });
