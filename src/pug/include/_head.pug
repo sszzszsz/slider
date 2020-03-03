@@ -30,30 +30,9 @@ if page.og.siteName !== ''
 if page.og.url !== ''
   meta(property="og:url" content=page.og.url)
 
-if page.twitter.title !== ''
-  meta(name="twitter:title" content=page.twitter.title)
-
-if page.twitter.description !== ''
-  meta(name="twitter:description" content=page.twitter.description)
-
-if page.twitter.image !== ''
-  meta(name="twitter:image" content=page.twitter.image)
-
-if page.twitter.card !== ''
-  meta(name="twitter:card" content=page.twitter.card)
-
-if page.twitter.site !== ''
-  meta(name="twitter:site" content=page.twitter.site)
-
-if page.twitter.url !== ''
-  meta(name="twitter:url" content=page.twitter.url)
-
 if page.favicon !== ''
   link(rel="icon" type="image/vnd.microsoft.icon" href=page.favicon)
 
-link(rel="stylesheet" href=ROOT_PATH+"css/style.css")
-
-if page.name == 'page'
-  link(rel="stylesheet" href=ROOT_PATH+"css/page/style.css")
+link(rel="stylesheet" href=css_path+"style.css")
 
 script(src="//cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js")
