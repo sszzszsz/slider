@@ -106,32 +106,6 @@ const scssConfig = {
   cache: true
 };
 
-// tsファイルの設定
-const tsLoader = ['ts-loader', 'tslint-loader'];
-const tsConfig = {
-  mode: mode,
-  entry: entry['ts'],
-  output: {
-    filename: '[name]',
-    publicPath: '/',
-    path: dir['public']
-  },
-  resolve: {
-    extensions: ['.js', '.ts']
-  },
-  module: {
-    rules: [
-      {
-        test: /\.ts$/,
-        use: tsLoader
-      }
-    ]
-  },
-  plugins: [new webpack.optimize.AggressiveMergingPlugin()],
-  cache: true
-};
-
-
 // pugファイルの設定
 const pugLoader = {
   use: [
@@ -167,7 +141,7 @@ const pugConfig = {
   cache: true
 };
 
-const es6Loader = ['babel-loade'];
+// jsファイルの設定
 const es6Config = {
   mode: mode,
   entry: entry['js'],
@@ -197,5 +171,6 @@ const es6Config = {
       }
     ]
   },
-};
+}
+
 module.exports = [scssConfig, es6Config, pugConfig];

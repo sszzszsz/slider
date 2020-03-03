@@ -566,12 +566,16 @@ export default class MerryGoRound {
     //インジケータークリック時
     function fadeIndicatorClickEvent(e) {
       console.log('Fade indicatorClickEvent')
-      _this.doFadeAnimate()
-      if (_this.currentActiveNum < nextSlideNum) {
-        _this.doSlideAnimate('next')
-      } else if (_this.currentActiveNum > nextSlideNum) {
-        _this.doSlideAnimate('prev')
-      }
+      let clickBtn = e.target
+      let clickBtnP = clickBtn.tagName == 'LI' ? clickBtn : clickBtn.parentElement
+      let nextSlideNum = Number(clickBtnP.attributes['data-dot']["value"])
+      //現在のカレント表示を取得
+      _this.getCurrentActive()
+      let currentSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[_this.currentActiveNum - 1]
+      let NextSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[nextSlideNum - 1]
+
+      _this.doFadeAnimate(currentSlide, NextSlide)
+      _this.setActive(nextSlideNum)
     }
 
     //左右矢印クリック時
@@ -580,13 +584,37 @@ export default class MerryGoRound {
       let clickBtn = e.target
       let clickBtnP = clickBtn.offsetParent
 
+      //現在のカレント表示を取得
+      _this.getCurrentActive()
+      let currentSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[_this.currentActiveNum - 1]
+      let NextSlide
+
+      //次へボタンを押したとき
       if (clickBtnP.className.indexOf('next') > -1) {
-        _this.doFadeAnimate('next')
-      } else if (clickBtnP.className.indexOf('prev') > -1) {
-        _this.doFadeAnimate('prev')
+        //一番最後のスライドがカレントだった場合
+        if (_this.currentActiveNum >= _this.itemLen) {
+          NextSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[0]
+          _this.setActive(1)
+        } else {
+          NextSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[_this.currentActiveNum]
+          _this.setActive(_this.currentActiveNum + 1)
+        }
       }
 
+      //前へボタンを押したとき
+      if (clickBtnP.className.indexOf('prev') > -1) {
+        //一番最初のスライドがカレントだった場合
+        if (_this.currentActiveNum <= 1) {
+          NextSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[_this.itemLen - 1]
+          _this.setActive(_this.itemLen)
+        } else {
+          NextSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[_this.currentActiveNum - 2]
+          _this.setActive(_this.currentActiveNum - 1)
+        }
+      }
+      _this.doFadeAnimate(currentSlide, NextSlide)
     }
+
     this.setEventEachEl(indicatorBtn, 'click', fadeIndicatorClickEvent)
     this.setEventEachEl(arrowBtn, 'click', fadeArrowClickEvent)
   }
@@ -595,34 +623,8 @@ export default class MerryGoRound {
   * フェードアニメーション
   * @param {String} direction
   ------------------------------*/
-  doFadeAnimate(direction) {
+  doFadeAnimate(currentSlide, NextSlide) {
     let _this = this
-    _this.getCurrentActive()
-    let currentSlide = document.querySelectorAll(`${this.wrapId} .merry-slide`)[this.currentActiveNum - 1]
-    let NextSlide
-
-    //次へボタンを押したとき
-    if (direction == 'next') {
-      //一番最後のスライドがカレントだった場合
-      if (this.currentActiveNum <= this.itemLen) {
-        NextSlide = document.querySelectorAll(`${this.wrapId} .merry-slide`)[0]
-        this.setActive(1)
-      } else {
-        NextSlide = document.querySelectorAll(`${this.wrapId} .merry-slide`)[this.currentActiveNum]
-        this.setActive(this.currentActiveNum + 1)
-      }
-    }
-    //前へボタンを押したとき
-    else if (direction == 'prev') {
-      //一番最初のスライドがカレントだった場合
-      if (this.currentActiveNum <= 1) {
-        NextSlide = document.querySelectorAll(`${this.wrapId} .merry-slide`)[this.itemLen - 1]
-        this.setActive(this.itemLen)
-      } else {
-        NextSlide = document.querySelectorAll(`${this.wrapId} .merry-slide`)[this.currentActiveNum - 2]
-        this.setActive(this.currentActiveNum - 1)
-      }
-    }
 
     TweenMax.fromTo(currentSlide, this.fadeSpeed,
       {
@@ -634,6 +636,7 @@ export default class MerryGoRound {
         position: 'absolute'
       }
     )
+
     TweenMax.fromTo(NextSlide, this.fadeSpeed,
       {
         zIndex: _this.itemLen + 1,
