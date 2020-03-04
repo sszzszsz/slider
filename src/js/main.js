@@ -4,17 +4,24 @@ class MerryGoRound {
   }
 
   merry(option) {
-    console.log('merry')
     this.elId = option.el
     this.elIdStr = option.el.replace('#', '')
     this.wrapId = option.el + '_wrap'
     this.indicator = option.indicator
     this.arrow = option.arrow
-    this.autoSlide = option.auto >= 0 ? option.auto : false
     this.count = option.count > 0 ? option.count : 1
-    this.fadeFlag = option.fade == true ? true : false
+
     this.slideSpeed = option.slideSpeed
+    this.autoSlide = option.autoSlide >= 0 ? option.autoSlide : false
+
+    this.fadeFlag = option.fade == true ? true : false
     this.fadeSpeed = option.fadeSpeed
+    this.autoFade = option.autoFade >= 0 ? option.autoFade : false
+
+    this.slideType =
+      option.fade == true ? 'fade'
+        : 'slide'
+
     this.init()
   }
 
@@ -26,19 +33,19 @@ class MerryGoRound {
     // 矢印の設定
     this.setArrow()
 
-    if (this.slideSpeed != undefined) {
+    if (this.slideType == 'slide') {
       this.slide()
     }
-    if (this.fadeFlag == true) {
+    if (this.slideType == 'fade') {
       this.fade()
     }
+    console.log('slidetype:', this.slideType)
   }
 
   /*------------------------------
   * slideアニメーションのセット
   ------------------------------*/
   slide() {
-    console.log('slide')
     // スライダーの設定
     this.setSlideSlider()
     //初期表示時にアクティブなスライドにクラス付与
@@ -51,8 +58,8 @@ class MerryGoRound {
     // 自動スライドの設定
     // option.autoに数字の指定があった場合、自動スライドする
     if (this.autoSlide > 0) {
-      this.autoSlideAnimate()
-      this.setHoverEventAutoSlideAnimation()
+      this.autoAnimate()
+      this.setHoverEventAutoAnimation()
     }
   }
 
@@ -60,7 +67,6 @@ class MerryGoRound {
   * fadeアニメーションのセット
   ------------------------------*/
   fade() {
-    console.log('fade')
     //初期表示時にアクティブなスライドにクラス付与
     this.setActive(this.count)
 
@@ -68,6 +74,14 @@ class MerryGoRound {
     this.setFadeSlider()
     // クリックイベントの登録
     this.setFadeClickEvent()
+
+    // 自動スライドの設定
+    // option.autoに数字の指定があった場合、自動スライドする
+    if (this.autoFade > 0) {
+      this.autoAnimate()
+      this.setHoverEventAutoAnimation()
+    }
+
   }
 
   /*------------------------------
@@ -241,7 +255,7 @@ class MerryGoRound {
       //自動でスライド中の場合のアニメーションを終了させてから
       //再自動スライド開始する
       if (_this.autoSlide > 0) {
-        _this.stopAutoSlideAnimate()
+        _this.stopAutoAnimate()
       }
 
       if (_this.currentActiveNum < nextSlideNum) {
@@ -269,7 +283,7 @@ class MerryGoRound {
       //自動でスライド中の場合のアニメーションを終了させてから
       //再自動スライド開始する
       if (_this.autoSlide > 0) {
-        _this.stopAutoSlideAnimate()
+        _this.stopAutoAnimate()
       }
 
       if (clickBtnP.className.indexOf('next') > -1) {
@@ -353,7 +367,7 @@ class MerryGoRound {
     function eventEnd() {
       _this.getCurrentActive()
       if (eventStartX > eventMoveX && eventStartX > (eventMoveX + 50)) {
-        console.log('右から左にマウスが移動')
+        //右から左にマウスが移動
         if (_this.currentActiveNum < _this.itemLen) {
           _this.skipSlideAnimate()
           _this.setActive(_this.currentActiveNum + 1)
@@ -363,7 +377,7 @@ class MerryGoRound {
           _this.doLoopAnmate('next')
         }
       } else if (eventStartX < eventMoveX && (eventStartX + 50) < eventMoveX) {
-        console.log('左から右にマウスが移動')
+        //左から右にマウスが移動
         if (_this.currentActiveNum > 1) {
           _this.skipSlideAnimate()
           _this.setActive(_this.currentActiveNum - 1)
@@ -495,21 +509,42 @@ class MerryGoRound {
   }
 
   /*------------------------------
-  * 自動アニメーション
+  * 自動スライドアニメーション
   ------------------------------*/
-  autoSlideAnimate() {
+  autoAnimate() {
     let _this = this
-    let timeOut = this.autoSlide * 1000 + this.slideSpeed * 1000
+    let timeOut = this.slideType == 'slide' ? this.autoSlide * 1000 + this.slideSpeed * 1000
+      : this.slideType == 'fade' ? this.autoFade * 1000 + this.fadeSpeed * 1000
+        : 0
+
+    console.log(timeOut)
+
 
     this.setIntervalId = setInterval(() => {
       _this.getCurrentActive()
+
       //次のスライドがある場合
-      //無い場合ループするように見せかける処理
       if (_this.currentActiveNum < _this.itemLen) {
-        _this.setActive(_this.currentActiveNum + 1)
-        _this.doSlideAnimate('next', 1)
+        if (_this.slideType == 'slide') {
+          console.log(_this.currentActiveNum)
+          _this.setActive(_this.currentActiveNum + 1)
+          _this.doSlideAnimate('next', 1)
+        } else if (_this.slideType == 'fade') {
+          console.log(_this.currentActiveNum)
+          let currentSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[_this.currentActiveNum - 1]
+          let NextSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[_this.currentActiveNum]
+          _this.setActive(_this.currentActiveNum + 1)
+          _this.doFadeAnimate(currentSlide, NextSlide)
+        }
       } else {
-        _this.doLoopAnmate('next')
+        if (_this.slideType == 'slide') {
+          _this.doLoopAnmate('next')
+        } else if (_this.slideType == 'fade') {
+          let currentSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[_this.itemLen - 1]
+          let NextSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[0]
+          _this.setActive(1)
+          _this.doFadeAnimate(currentSlide, NextSlide)
+        }
       }
     }, timeOut);
   }
@@ -517,7 +552,7 @@ class MerryGoRound {
   /*------------------------------
   * 自動アニメーション中止
   ------------------------------*/
-  stopAutoSlideAnimate() {
+  stopAutoAnimate() {
     if (this.setIntervalId != null) {
       clearInterval(this.setIntervalId)
       this.setIntervalId = null
@@ -527,18 +562,18 @@ class MerryGoRound {
   /*------------------------------
   * ホバーで自動アニメーションを止める
   ------------------------------*/
-  setHoverEventAutoSlideAnimation() {
+  setHoverEventAutoAnimation() {
     let _this = this
     this.cont.addEventListener('mouseenter', setHoverEvent, { passive: false })
     this.cont.addEventListener('mouseleave', clearHoverEvent, { passive: false })
 
     function setHoverEvent() {
       console.log('setHoverEvent')
-      _this.stopAutoSlideAnimate()
+      _this.stopAutoAnimate()
     }
     function clearHoverEvent() {
       console.log('clearHoverEvent')
-      _this.autoSlideAnimate()
+      _this.autoAnimate()
     }
   }
 
@@ -573,9 +608,8 @@ class MerryGoRound {
       _this.getCurrentActive()
       let currentSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[_this.currentActiveNum - 1]
       let NextSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[nextSlideNum - 1]
-
-      _this.doFadeAnimate(currentSlide, NextSlide)
       _this.setActive(nextSlideNum)
+      _this.doFadeAnimate(currentSlide, NextSlide)
     }
 
     //左右矢印クリック時
