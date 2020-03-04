@@ -1,6 +1,6 @@
 const presets =  [
   ["@babel/preset-env", {
-    "modules": false,
+    "modules": true,
     "targets": ["> 0.5% in JP, not dead", "not ie <= 10"],
     "useBuiltIns": "usage"
   }]

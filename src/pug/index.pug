@@ -1,6 +1,3 @@
-//- include ./_config
-//- - var page = pagelist['top'];
-//- block vars
 include ./_config.pug
 - var key = 'top'
 - var page = pages[key]
@@ -10,7 +7,6 @@ html(lang="ja")
   head
     include ./include/_head
   body
-
     include ./include/_header
 
     // main
@@ -36,6 +32,4 @@ html(lang="ja")
     // /main
 
     include ./include/_footer
-
-
-    include ./include/_script
+    include ./include/_script.html

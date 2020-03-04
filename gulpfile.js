@@ -48,9 +48,6 @@ gulp.task('sass', function () {
       autoprefixer({
         overrideBrowserslist: ['last 2 versions', 'ie >= 11', 'Android >= 4'],// ◯autoprefixer / 対象ブラウザ ◯postCSS
         cascade: false //インデント整形
-      }),
-      cssdeclsort({ //CSSのプロパティをソートし直す(alphabetically -> アルファベット順 / SMACSS / Concentric CSS)
-        order: 'alphabetically'
       })
     ]))
     .pipe(lec({
@@ -65,13 +62,13 @@ gulp.task('sass', function () {
 gulp.task('babel', () => {
   return gulp.src([srcDir + '/js/**/*.js', '!' + srcDir + '/js/**/_*.js'])
     .pipe(babel({
-      presets: ['@babel/preset-env']
+      'presets': ['@babel/preset-env']
     }))
+    .pipe(uglify()) // ◯gulp-uglify / jsの圧縮
     .pipe(lec({
       verbose: false,
       eolc: 'LF'
     }))
-    .pipe(uglify()) // ◯gulp-uglify / jsの圧縮
     .pipe(gulp.dest(distDir + '/assets/js'));
 })
 
