@@ -1,6 +1,47 @@
+/*------------------------------
+* 子要素に特定のクラスを持つ要素を返す
+* @param {HTMLElement} parentEl 親要素
+* @param {String} targetClass 特定したいクラス名
+* @return {HTMLElement}
+------------------------------*/
+function hasClass(parentEl, targetClass) {
+  for (let i = 0; i < parentEl.children.length; i++) {
+    if (parentEl.children[i].className.indexOf(targetClass) > -1) {
+      return parentEl.children[i]
+    }
+  }
+}
+
+/*------------------------------
+* 特定のクラスを削除する
+* @param {HTMLElement} elArray 親要素
+* @param {String} className 特定したいクラス名
+------------------------------*/
+function removeClass(elArray, className) {
+  for (let i = 0; i < elArray.length; i++) {
+    if (elArray[i].classList.contains(className)) {
+      elArray[i].classList.remove(className)
+    }
+  }
+}
+
+/*------------------------------
+//クラスで取得した各要素にイベントを登録する
+------------------------------*/
+function setEventEachEl(elArray, event, func) {
+  for (let i = 0; i < elArray.length; i++) {
+    elArray[i].addEventListener(event, func, false);
+  }
+}
+
 class MerryGoRound {
 
   constructor() {
+    this.cont = null
+    this.slider = null
+    this.itemLen = 0
+    this.originalHtml = []
+    this.winW = 0
   }
 
   merry(option) {
@@ -10,10 +51,9 @@ class MerryGoRound {
     this.indicator = option.indicator
     this.arrow = option.arrow
     this.count = option.count > 0 ? option.count : 1
-
     this.slideSpeed = option.slideSpeed
     this.autoSlide = option.autoSlide >= 0 ? option.autoSlide : false
-
+    this.endFunc = typeof option.endFunc === 'function' ? option.endFunc : false
     this.fadeFlag = option.fade == true ? true : false
     this.fadeSpeed = option.fadeSpeed
     this.autoFade = option.autoFade >= 0 ? option.autoFade : false
@@ -26,12 +66,14 @@ class MerryGoRound {
   }
 
   init() {
+    this.resize()
     //スライダーを横並びにする
     this.setInitStyle()
     // インジケーターの設定
-    this.setIndicator()
+    this.addIndicator()
     // 矢印の設定
     this.setArrow()
+
 
     if (this.slideType == 'slide') {
       this.slide()
@@ -85,42 +127,6 @@ class MerryGoRound {
   }
 
   /*------------------------------
-  * 子要素に特定のクラスを持つ要素を返す
-  * @param {HTMLElement} parentEl 親要素
-  * @param {String} targetClass 特定したいクラス名
-  * @return {HTMLElement}
-  ------------------------------*/
-  hasClass(parentEl, targetClass) {
-    for (let i = 0; i < parentEl.children.length; i++) {
-      if (parentEl.children[i].className.indexOf(targetClass) > -1) {
-        return parentEl.children[i]
-      }
-    }
-  }
-
-  /*------------------------------
-  * 特定のクラスを削除する
-  * @param {HTMLElement} elArray 親要素
-  * @param {String} className 特定したいクラス名
-  ------------------------------*/
-  removeClass(elArray, className) {
-    for (let i = 0; i < elArray.length; i++) {
-      if (elArray[i].classList.contains(className)) {
-        elArray[i].classList.remove(className)
-      }
-    }
-  }
-
-  /*------------------------------
-  //クラスで取得した各要素にイベントを登録する
-  ------------------------------*/
-  setEventEachEl(elArray, event, func) {
-    for (let i = 0; i < elArray.length; i++) {
-      elArray[i].addEventListener(event, func, false);
-    }
-  }
-
-  /*------------------------------
   * sliderの初期設定
   ------------------------------*/
   setInitStyle() {
@@ -134,7 +140,6 @@ class MerryGoRound {
     this.itemLen = this.slider.childElementCount
 
     //オリジナルの状態を複製しておく
-    this.originalHtml = []
     for (let i = 0; i < this.itemLen; i++) {
       this.originalHtml[i] = this.slider.children[i].outerHTML
     }
@@ -150,14 +155,14 @@ class MerryGoRound {
         width: 100 / this.count + '%'
       });
     }
-
+    this.winW = document.body.clientWidth
   }
 
   /*------------------------------
   * インジケーターの設定
   * option:indicator がfalseでない限り表示する
   ------------------------------*/
-  setIndicator() {
+  addIndicator() {
     if (this.indicator != false) {
       //インジケーターの親要素を作成し追加する
       let newDotWrap = document.createElement('ul');
@@ -173,7 +178,7 @@ class MerryGoRound {
         newDot.appendChild(newDotBtn);
         newDot.setAttribute('class', 'merry-dot');
         newDot.setAttribute('data-dot', i + 1);
-        let DotWrap = this.hasClass(this.cont, 'merry-indicator')
+        let DotWrap = hasClass(this.cont, 'merry-indicator')
         DotWrap.appendChild(newDot);
       }
     }
@@ -205,7 +210,7 @@ class MerryGoRound {
         } else {
           newArrow.classList.add('merry-arrow-next')
         }
-        let ArrowWrap = this.hasClass(this.cont, 'merry-arrowList')
+        let ArrowWrap = hasClass(this.cont, 'merry-arrowList')
         ArrowWrap.appendChild(newArrow);
       }
     }
@@ -246,9 +251,6 @@ class MerryGoRound {
       let clickBtnP = clickBtn.tagName == 'LI' ? clickBtn : clickBtn.parentElement
       let nextSlideNum = Number(clickBtnP.attributes['data-dot']["value"])
 
-      //現在のカレント表示を取得
-      _this.getCurrentActive()
-
       //アニメーション中だった場合現在のアニメーションを終了させる
       _this.skipSlideAnimate()
 
@@ -257,25 +259,25 @@ class MerryGoRound {
       if (_this.autoSlide > 0) {
         _this.stopAutoAnimate()
       }
+      //現在のカレント表示を取得
+      _this.getCurrentActive()
 
       if (_this.currentActiveNum < nextSlideNum) {
         let slideDistance = nextSlideNum - _this.currentActiveNum
         _this.setActive(nextSlideNum)
-        _this.doSlideAnimate('next', slideDistance)
+        _this.doSlideAnimate('next', slideDistance, _this.endFunc)
       } else if (_this.currentActiveNum > nextSlideNum) {
         let slideDistance = _this.currentActiveNum - nextSlideNum
         _this.setActive(nextSlideNum)
-        _this.doSlideAnimate('prev', slideDistance)
+        _this.doSlideAnimate('prev', slideDistance, _this.endFunc)
       }
     }
 
     //左右矢印をクリックした時に実行
     function arrowClickEvent(e) {
+      console.log('左右矢印をクリック!')
       let clickBtn = e.target
       let clickBtnP = clickBtn.offsetParent
-
-      //現在のカレント表示を取得
-      _this.getCurrentActive()
 
       //アニメーション中だった場合現在のアニメーションを終了させる
       _this.skipSlideAnimate()
@@ -285,30 +287,36 @@ class MerryGoRound {
       if (_this.autoSlide > 0) {
         _this.stopAutoAnimate()
       }
+      //現在のカレント表示を取得
+      _this.getCurrentActive()
 
       if (clickBtnP.className.indexOf('next') > -1) {
         //次のスライドがある場合
-        //無い場合ループするように見せかける処理
-        if (_this.currentActiveNum < _this.itemLen) {
+        if (_this.currentActiveNum <= _this.itemLen) {
           _this.setActive(_this.currentActiveNum + 1)
-          _this.doSlideAnimate('next', 1)
+          _this.doSlideAnimate('next', 1, _this.endFunc)
+          //無い場合、一番最初に戻る
         } else {
-          _this.doLoopAnmate('next')
+          console.log('次のスライド無')
+          _this.setActive(1)
+          _this.doSlideAnimate('next', 1, _this.endFunc)
         }
-      } else if (clickBtnP.className.indexOf('prev') > -1) {
+
         //前のスライドがある場合
-        //無い場合ループするように見せかける処理
+      } else if (clickBtnP.className.indexOf('prev') > -1) {
         if (_this.currentActiveNum > 1) {
           _this.setActive(_this.currentActiveNum - 1)
-          _this.doSlideAnimate('prev', 1)
+          _this.doSlideAnimate('prev', 1, _this.endFunc)
+
+          //無い場合ループするように見せかける処理
         } else if (_this.currentActiveNum <= 1) {
           _this.doLoopAnmate('prev')
         }
       }
     }
 
-    this.setEventEachEl(indicatorBtn, 'click', indicatorClickEvent)
-    this.setEventEachEl(arrowBtn, 'click', arrowClickEvent)
+    setEventEachEl(indicatorBtn, 'click', indicatorClickEvent)
+    setEventEachEl(arrowBtn, 'click', arrowClickEvent)
 
   }
 
@@ -421,8 +429,19 @@ class MerryGoRound {
   * @return {Number} currentActiveNum
   ------------------------------*/
   getCurrentActive() {
-    let currentActiveSlide = document.querySelectorAll(`${this.wrapId} .merry-slide-active`)
-    this.currentActiveNum = Number(currentActiveSlide[0].attributes['data-slide']['value'])
+    //trasnformXの値を取得
+    let sliderCurrentPos
+
+    if (document.querySelectorAll(this.elId)[0].style.transform == '') {
+      sliderCurrentPos = 0
+      this.currentActiveNum = 1
+    } else {
+      let sliderTransform = document.querySelectorAll(this.elId)[0].style.transform
+      sliderCurrentPos = Number(sliderTransform.replace('matrix(', '').replace(')', '').split(',')[4])
+      this.currentActiveNum = Math.abs(sliderCurrentPos) / this.winW + 1
+    }
+
+    console.log(this.currentActiveNum)
     return this.currentActiveNum
   }
 
@@ -433,13 +452,6 @@ class MerryGoRound {
   removeActive() {
     let slideItmes = document.querySelectorAll(`${this.wrapId} .merry-slide`)
     let dotItems = document.querySelectorAll(`${this.wrapId} .merry-dot`)
-    function removeClass(elArray, className) {
-      for (let i = 0; i < elArray.length; i++) {
-        if (elArray[i].classList.contains(className)) {
-          elArray[i].classList.remove(className)
-        }
-      }
-    }
     removeClass(slideItmes, 'merry-slide-active')
     removeClass(dotItems, 'merry-dot-active')
   }
@@ -447,28 +459,60 @@ class MerryGoRound {
   /*------------------------------
   * スライドアニメーション
   * @param {String} direction
+  * @param {Function} callBack
   ------------------------------*/
   doSlideAnimate(direction, count, callBack) {
-    let slideDirection
-    this.winW = document.body.clientWidth
+    let _this = this
+    let loopFlag = false
     let sliderCurrentPos = document.querySelectorAll(this.elId)[0].style.transform
+    let slideDirection
+
     if (sliderCurrentPos == '') {
       sliderCurrentPos = 0
     } else {
       //trasnformXの値を取得
       sliderCurrentPos = Number(sliderCurrentPos.replace('matrix(', '').replace(')', '').split(',')[4])
     }
+    //スライドする量 = 今のtransformX - スライドするスライドの枚数×(画面幅÷画面内に表示されているスライドの枚数)
+    slideDirection = sliderCurrentPos - count * this.winW / this.count
 
     if (direction == 'next') {
-      //スライドする量 = 今のtransformX - スライドするスライドの枚数×(画面幅÷画面内に表示されているスライドの枚数)
-      slideDirection = sliderCurrentPos - count * this.winW / this.count
+      //現在の位置が一番最後のスライドがスライドした状態だった場合
+      //つまり、一番後ろに複製されいてる1枚目のスライドが表示されている状態の場合
+      //最初の位置に戻してから二枚目分スライドする
+      if (Math.abs(sliderCurrentPos) == (count * this.winW / this.count) * this.itemLen) {
+        console.log(sliderCurrentPos)
+        TweenMax.set(_this.elId, {
+          x: 0,
+        })
+        slideDirection = -(count * this.winW / this.count) * 1
+        _this.setActive(2)
+
+        //次のスライド量が最後のスライド表示時より大きい場合
+        //一枚目に戻るような見せかけ処理を行う
+      } else if (Math.abs(slideDirection) / (count * this.winW / this.count) >= this.itemLen) {
+        console.log('ループ')
+        loopFlag = true
+        _this.setActive(1)
+      }
     } else if (direction == 'prev') {
       slideDirection = sliderCurrentPos + count * this.winW / this.count
     }
 
     this.tween = TweenMax.to(this.elId, this.slideSpeed, {
       x: slideDirection,
-      onComplete: callBack
+      onComplete: function () {
+        //引数のコールバックが関数だった場合実行
+        if (typeof callBack === 'function') {
+          callBack()
+        }
+        if (loopFlag) {
+          TweenMax.set(_this.elId, {
+            x: 0,
+          })
+        }
+        loopFlag = false
+      }
     });
   }
 
@@ -477,15 +521,12 @@ class MerryGoRound {
   * @param {String} direction
   ------------------------------*/
   doLoopAnmate(direction) {
-    console.log('行き過ぎ')
     let _this = this
 
     function resetSlidePos() {
       let slidePos = direction == 'next' ? 0 : (_this.itemLen - 1) * -_this.winW / _this.count
       TweenMax.set(_this.elId, {
         x: slidePos,
-        onComplete: function () {
-        }
       })
     }
 
@@ -504,6 +545,8 @@ class MerryGoRound {
   skipSlideAnimate() {
     if (TweenMax.isTweening(this.elId) == true) {
       this.tween.seek(this.slideSpeed)
+      this.removeActive()
+
       console.log('アニメーションすっ飛ばし')
     }
   }
@@ -513,24 +556,20 @@ class MerryGoRound {
   ------------------------------*/
   autoAnimate() {
     let _this = this
-    let timeOut = this.slideType == 'slide' ? this.autoSlide * 1000 + this.slideSpeed * 1000
-      : this.slideType == 'fade' ? this.autoFade * 1000 + this.fadeSpeed * 1000
-        : 0
-
-    console.log(timeOut)
-
+    let timeOut
+      = this.slideType == 'slide' ? this.autoSlide * 1000 + this.slideSpeed * 1000
+        : this.slideType == 'fade' ? this.autoFade * 1000 + this.fadeSpeed * 1000
+          : 0
 
     this.setIntervalId = setInterval(() => {
       _this.getCurrentActive()
 
       //次のスライドがある場合
-      if (_this.currentActiveNum < _this.itemLen) {
+      if (_this.currentActiveNum <= _this.itemLen) {
         if (_this.slideType == 'slide') {
-          console.log(_this.currentActiveNum)
           _this.setActive(_this.currentActiveNum + 1)
-          _this.doSlideAnimate('next', 1)
+          _this.doSlideAnimate('next', 1, _this.endFunc)
         } else if (_this.slideType == 'fade') {
-          console.log(_this.currentActiveNum)
           let currentSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[_this.currentActiveNum - 1]
           let NextSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[_this.currentActiveNum]
           _this.setActive(_this.currentActiveNum + 1)
@@ -538,7 +577,8 @@ class MerryGoRound {
         }
       } else {
         if (_this.slideType == 'slide') {
-          _this.doLoopAnmate('next')
+          _this.setActive(1)
+          _this.doSlideAnimate('next', 1, _this.endFunc)
         } else if (_this.slideType == 'fade') {
           let currentSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[_this.itemLen - 1]
           let NextSlide = document.querySelectorAll(`${_this.wrapId} .merry-slide`)[0]
@@ -568,11 +608,9 @@ class MerryGoRound {
     this.cont.addEventListener('mouseleave', clearHoverEvent, { passive: false })
 
     function setHoverEvent() {
-      console.log('setHoverEvent')
       _this.stopAutoAnimate()
     }
     function clearHoverEvent() {
-      console.log('clearHoverEvent')
       _this.autoAnimate()
     }
   }
@@ -589,7 +627,7 @@ class MerryGoRound {
   }
 
   /*------------------------------
-  * クリックイベントの付与
+  * フェードクリックイベントの付与
   * 左右矢印とインジケーターにクリックでフェードするイベントを付与する
   ------------------------------*/
   setFadeClickEvent() {
@@ -679,5 +717,12 @@ class MerryGoRound {
       },
       { opacity: 1 }
     )
+  }
+
+  resize() {
+    let _this = this
+    window.addEventListener('resize', function () {
+      _this.winW = document.body.clientWidth
+    })
   }
 }

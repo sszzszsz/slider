@@ -64,7 +64,7 @@ gulp.task('babel', () => {
     .pipe(babel({
       'presets': ['@babel/preset-env']
     }))
-    .pipe(uglify()) // ◯gulp-uglify / jsの圧縮
+    // .pipe(uglify()) // ◯gulp-uglify / jsの圧縮
     .pipe(lec({
       verbose: false,
       eolc: 'LF'
@@ -104,7 +104,8 @@ gulp.task('browser-reload', function () {
 
 // 監視(watch)
 gulp.task('watch', function () {
-  gulp.watch(srcDir + '/pug/**/*.pug').on('change', gulp.series('pug', 'browser-reload'))
+  gulp.watch(srcDir + '/pug/**/*.pug').on('change', gulp.series('pug', 'browser-reload'));
+  gulp.watch(srcDir + '/pug/**/*.html').on('change', gulp.series('pug', 'browser-reload'));
   gulp.watch(srcDir + '/scss/**/*.scss').on('change', gulp.series('sass', 'browser-reload'));
   gulp.watch(srcDir + '/js/**/*.js').on('change', gulp.series('babel', 'browser-reload'));
   gulp.watch(srcDir + '/img/**/*.{jpg,jpeg,png,gif,svg}', gulp.task('imagemin'));
