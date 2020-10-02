@@ -42,6 +42,7 @@ class MerryGoRound {
     this.itemLen = 0
     this.originalHtml = []
     this.winW = 0
+    this.setIntervalId = null
   }
 
   merry(option) {
@@ -302,15 +303,17 @@ class MerryGoRound {
           _this.doSlideAnimate('next', 1, _this.endFunc)
         }
 
-        //前のスライドがある場合
       } else if (clickBtnP.className.indexOf('prev') > -1) {
+        //前のスライドがある場合
         if (_this.currentActiveNum > 1) {
           _this.setActive(_this.currentActiveNum - 1)
           _this.doSlideAnimate('prev', 1, _this.endFunc)
 
           //無い場合ループするように見せかける処理
         } else if (_this.currentActiveNum <= 1) {
-          _this.doLoopAnmate('prev')
+          console.log('次のスライド無')
+          _this.setActive(_this.itemLen)
+          _this.doSlideAnimate('prev', 1, _this.endFunc)
         }
       }
     }
@@ -373,29 +376,36 @@ class MerryGoRound {
     this.slider.addEventListener('mouseup', eventEnd, { passive: false })
 
     function eventEnd() {
+      //アニメーション中だった場合現在のアニメーションを終了させる
+      _this.skipSlideAnimate()
+      //自動でスライド中の場合のアニメーションを終了させてから
+      //再自動スライド開始する
+      if (_this.autoSlide > 0) {
+        _this.stopAutoAnimate()
+      }
+      //現在のカレント表示を取得
       _this.getCurrentActive()
       if (eventStartX > eventMoveX && eventStartX > (eventMoveX + 50)) {
         //右から左にマウスが移動
-        if (_this.currentActiveNum < _this.itemLen) {
-          _this.skipSlideAnimate()
+        if (_this.currentActiveNum <= _this.itemLen) {
           _this.setActive(_this.currentActiveNum + 1)
-          _this.doSlideAnimate('next', 1)
+          _this.doSlideAnimate('next', 1, _this.endFunc)
         } else {
-          _this.skipSlideAnimate()
-          _this.doLoopAnmate('next')
+          console.log('次のスライド無')
+          _this.setActive(1)
+          _this.doSlideAnimate('next', 1, _this.endFunc)
         }
       } else if (eventStartX < eventMoveX && (eventStartX + 50) < eventMoveX) {
         //左から右にマウスが移動
         if (_this.currentActiveNum > 1) {
-          _this.skipSlideAnimate()
           _this.setActive(_this.currentActiveNum - 1)
-          _this.doSlideAnimate('prev', 1)
+          _this.doSlideAnimate('prev', 1, _this.endFunc)
         } else if (_this.currentActiveNum <= 1) {
-          _this.skipSlideAnimate()
-          _this.doLoopAnmate('prev')
+          console.log('次のスライド無')
+          _this.setActive(_this.itemLen)
+          _this.doSlideAnimate('prev', 1, _this.endFunc)
         }
       }
-
       flickFlag = false
     }
   }
@@ -473,12 +483,13 @@ class MerryGoRound {
       //trasnformXの値を取得
       sliderCurrentPos = Number(sliderCurrentPos.replace('matrix(', '').replace(')', '').split(',')[4])
     }
-    //スライドする量 = 今のtransformX - スライドするスライドの枚数×(画面幅÷画面内に表示されているスライドの枚数)
-    slideDirection = sliderCurrentPos - count * this.winW / this.count
 
     if (direction == 'next') {
+      //スライドする量 = 今のtransformX - スライドするスライドの枚数×(画面幅÷画面内に表示されているスライドの枚数)
+      slideDirection = sliderCurrentPos - count * this.winW / this.count
+
       //現在の位置が一番最後のスライドがスライドした状態だった場合
-      //つまり、一番後ろに複製されいてる1枚目のスライドが表示されている状態の場合
+      //つまり、一番後ろに複製されいてるスライドが表示されている状態の場合
       //最初の位置に戻してから二枚目分スライドする
       if (Math.abs(sliderCurrentPos) == (count * this.winW / this.count) * this.itemLen) {
         console.log(sliderCurrentPos)
@@ -487,16 +498,37 @@ class MerryGoRound {
         })
         slideDirection = -(count * this.winW / this.count) * 1
         _this.setActive(2)
+      }
 
-        //次のスライド量が最後のスライド表示時より大きい場合
-        //一枚目に戻るような見せかけ処理を行う
-      } else if (Math.abs(slideDirection) / (count * this.winW / this.count) >= this.itemLen) {
+      //次のスライド量が最後のスライド表示時より大きい場合
+      //一枚目に戻るような見せかけ処理を行う
+      if (Math.abs(slideDirection) / (count * this.winW / this.count) >= this.itemLen) {
         console.log('ループ')
         loopFlag = true
         _this.setActive(1)
       }
     } else if (direction == 'prev') {
+      //スライドする量 = 今のtransformX + スライドするスライドの枚数×(画面幅÷画面内に表示されているスライドの枚数)
       slideDirection = sliderCurrentPos + count * this.winW / this.count
+
+      //現在の位置が一番最初のスライドがスライドした状態だった場合
+      //つまり、一番初に複製されいてるスライドが表示されている状態の場合
+      //複製されいてる最後のスライドの位置にしてから1枚目分スライドする
+      if (sliderCurrentPos == (count * this.winW / this.count)) {
+        console.log(sliderCurrentPos)
+        TweenMax.set(_this.elId, {
+          x: -(count * this.winW / this.count) * this.itemLen,
+        })
+        slideDirection = -(count * this.winW / this.count) * (this.itemLen - 1)
+        _this.setActive(this.itemLen)
+      }
+
+      //現在の位置が0の初期位置の場合、ループ処理
+      if (Math.abs(sliderCurrentPos) == 0) {
+        console.log('ループ')
+        loopFlag = true
+        _this.setActive(_this.itemLen)
+      }
     }
 
     this.tween = TweenMax.to(this.elId, this.slideSpeed, {
@@ -506,37 +538,18 @@ class MerryGoRound {
         if (typeof callBack === 'function') {
           callBack()
         }
-        if (loopFlag) {
+        if (loopFlag && direction == 'next') {
           TweenMax.set(_this.elId, {
             x: 0,
+          })
+        } else if (loopFlag && direction == 'prev') {
+          TweenMax.set(_this.elId, {
+            x: -(count * _this.winW / _this.count) * (_this.itemLen - 1),
           })
         }
         loopFlag = false
       }
     });
-  }
-
-  /*------------------------------
-  * ループアニメーション
-  * @param {String} direction
-  ------------------------------*/
-  doLoopAnmate(direction) {
-    let _this = this
-
-    function resetSlidePos() {
-      let slidePos = direction == 'next' ? 0 : (_this.itemLen - 1) * -_this.winW / _this.count
-      TweenMax.set(_this.elId, {
-        x: slidePos,
-      })
-    }
-
-    if (direction == 'next') {
-      this.doSlideAnimate('next', 1, resetSlidePos)
-      _this.setActive(1)
-    } else if (direction == 'prev') {
-      this.doSlideAnimate('prev', 1, resetSlidePos)
-      _this.setActive(_this.itemLen)
-    }
   }
 
   /*------------------------------
