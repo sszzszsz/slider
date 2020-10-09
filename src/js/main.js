@@ -43,6 +43,7 @@ class MerryGoRound {
     this.originalHtml = []
     this.winW = 0
     this.setIntervalId = null
+    this.slideItemW = 0
   }
 
   merry(option) {
@@ -52,6 +53,7 @@ class MerryGoRound {
     this.indicator = option.indicator
     this.arrow = option.arrow
     this.count = option.count > 0 ? option.count : 1
+    this.margine = option.margine != null ? option.margine : 0
     this.slideSpeed = option.slideSpeed
     this.autoSlide = option.autoSlide >= 0 ? option.autoSlide : false
     this.endFunc = typeof option.endFunc === 'function' ? option.endFunc : false
@@ -67,11 +69,11 @@ class MerryGoRound {
   }
 
   init() {
-    this.resize()
+    this.setResizeEvent()
     //スライダーを横並びにする
     this.setInitStyle()
     // インジケーターの設定
-    this.addIndicator()
+    this.setIndicator()
     // 矢印の設定
     this.setArrow()
 
@@ -146,24 +148,43 @@ class MerryGoRound {
     }
 
     let slideItmes = this.slider.children;
-
+    this.winW = document.body.clientWidth
+    this.clacSlideWidth()
+    let _this = this
     //各スライドに共通クラス、データ属性付与
     for (let i = 0; i < slideItmes.length; i++) {
       slideItmes[i].setAttribute('class', 'merry-slide')
       slideItmes[i].setAttribute('data-slide', i + 1)
       let slide = document.querySelectorAll(`${this.wrapId} .merry-slide`)[i]
-      TweenMax.set(slide, {
-        width: 100 / this.count + '%'
-      });
+      slide.style.width = this.slideItemW
     }
-    this.winW = document.body.clientWidth
-  }
 
+    if (this.margine != null) {
+      TweenMax.set(this.slider, {
+        x: _this.margine
+      })
+    }
+  }
+  /*------------------------------
+  * スライド一枚あたりの幅計算
+  * option:indicator がfalseでない限り表示する
+  ------------------------------*/
+  clacSlideWidth() {
+    this.margineNum = parseInt(this.margine, 10)
+    this.margineUnit = this.margine.slice(String(this.margineNum).length)
+
+    if (this.margineUnit == 'px') {
+      this.slideItemW = String((this.winW - this.margineNum * 2) / this.count) + this.margineUnit
+    } else if (this.margineUnit == '%') {
+
+    }
+    console.log(this.slideItemW)
+  }
   /*------------------------------
   * インジケーターの設定
   * option:indicator がfalseでない限り表示する
   ------------------------------*/
-  addIndicator() {
+  setIndicator() {
     if (this.indicator != false) {
       //インジケーターの親要素を作成し追加する
       let newDotWrap = document.createElement('ul');
@@ -226,14 +247,14 @@ class MerryGoRound {
     let firstSlide = this.originalHtml[0]
     this.slider.insertAdjacentHTML('beforeend', firstSlide)
     this.slider.lastElementChild.classList.add('merry-slide-copy')
-    this.slider.lastElementChild.style.width = 100 / this.count + '%'
+    this.slider.lastElementChild.style.width = this.slideItemW
 
     let lastSlide = this.originalHtml[this.itemLen - 1]
     this.slider.insertAdjacentHTML('afterbegin', lastSlide)
     this.slider.firstElementChild.classList.add('merry-slide-copy')
-    this.slider.firstElementChild.style.width = 100 / this.count + '%'
+    this.slider.firstElementChild.style.width = this.slideItemW
     this.slider.firstElementChild.style.position = 'absolute'
-    this.slider.firstElementChild.style.left = 100 / -this.count + '%'
+    this.slider.firstElementChild.style.left = '-' + this.slideItemW
   }
 
   /*------------------------------
@@ -439,19 +460,25 @@ class MerryGoRound {
   * @return {Number} currentActiveNum
   ------------------------------*/
   getCurrentActive() {
-    //trasnformXの値を取得
-    let sliderCurrentPos
+    //trasnformの値を取得
+    let sliderCurrentPos = document.querySelectorAll(this.elId)[0].style.transform
 
-    if (document.querySelectorAll(this.elId)[0].style.transform == '') {
+    //左右の余白設定無かつ、初期表示でtransformの指定がない場合
+    if (this.margine == 0 && sliderCurrentPos == '') {
       sliderCurrentPos = 0
       this.currentActiveNum = 1
     } else {
-      let sliderTransform = document.querySelectorAll(this.elId)[0].style.transform
-      sliderCurrentPos = Number(sliderTransform.replace('matrix(', '').replace(')', '').split(',')[4])
-      this.currentActiveNum = Math.abs(sliderCurrentPos) / this.winW + 1
+      //trasnformXの値を取得
+      sliderCurrentPos = Number(sliderCurrentPos.replace('matrix(', '').replace(')', '').split(',')[4])
+
+      if (this.margineNum == sliderCurrentPos) {
+        this.currentActiveNum = 1
+      } else {
+        this.currentActiveNum = (Math.abs(sliderCurrentPos) + this.margineNum) / parseInt(this.slideItemW, 10) + 1
+      }
     }
 
-    console.log(this.currentActiveNum)
+    console.log(Math.floor(this.currentActiveNum))
     return this.currentActiveNum
   }
 
@@ -472,12 +499,14 @@ class MerryGoRound {
   * @param {Function} callBack
   ------------------------------*/
   doSlideAnimate(direction, count, callBack) {
+    console.log('スライドアニメーション')
     let _this = this
     let loopFlag = false
     let sliderCurrentPos = document.querySelectorAll(this.elId)[0].style.transform
     let slideDirection
 
-    if (sliderCurrentPos == '') {
+    //左右の余白設定無かつ、初期表示でtransformの指定がない場合
+    if (this.margine == 0 && sliderCurrentPos == '') {
       sliderCurrentPos = 0
     } else {
       //trasnformXの値を取得
@@ -485,16 +514,16 @@ class MerryGoRound {
     }
 
     if (direction == 'next') {
-      //スライドする量 = 今のtransformX - スライドするスライドの枚数×(画面幅÷画面内に表示されているスライドの枚数)
-      slideDirection = sliderCurrentPos - count * this.winW / this.count
+      //スライドする量 = 今のtransformX - スライドの幅
+      slideDirection = sliderCurrentPos - parseInt(this.slideItemW, 10)
 
       //現在の位置が一番最後のスライドがスライドした状態だった場合
       //つまり、一番後ろに複製されいてるスライドが表示されている状態の場合
       //最初の位置に戻してから二枚目分スライドする
-      if (Math.abs(sliderCurrentPos) == (count * this.winW / this.count) * this.itemLen) {
+      if (Math.abs(sliderCurrentPos) == parseInt(this.slideItemW, 10) * this.itemLen + this.margineNum) {
         console.log(sliderCurrentPos)
         TweenMax.set(_this.elId, {
-          x: 0,
+          x: _this.margine,
         })
         slideDirection = -(count * this.winW / this.count) * 1
         _this.setActive(2)
@@ -502,19 +531,19 @@ class MerryGoRound {
 
       //次のスライド量が最後のスライド表示時より大きい場合
       //一枚目に戻るような見せかけ処理を行う
-      if (Math.abs(slideDirection) / (count * this.winW / this.count) >= this.itemLen) {
+      if (Math.abs(slideDirection) >= parseInt(this.slideItemW, 10) * 3 - this.margineNum) {
         console.log('ループ')
         loopFlag = true
         _this.setActive(1)
       }
     } else if (direction == 'prev') {
-      //スライドする量 = 今のtransformX + スライドするスライドの枚数×(画面幅÷画面内に表示されているスライドの枚数)
-      slideDirection = sliderCurrentPos + count * this.winW / this.count
+      //スライドする量 = 今のtransformX + スライドの幅
+      slideDirection = sliderCurrentPos + parseInt(this.slideItemW, 10)
 
       //現在の位置が一番最初のスライドがスライドした状態だった場合
       //つまり、一番初に複製されいてるスライドが表示されている状態の場合
       //複製されいてる最後のスライドの位置にしてから1枚目分スライドする
-      if (sliderCurrentPos == (count * this.winW / this.count)) {
+      if (sliderCurrentPos == parseInt(this.slideItemW, 10) - this.margineNum) {
         console.log(sliderCurrentPos)
         TweenMax.set(_this.elId, {
           x: -(count * this.winW / this.count) * this.itemLen,
@@ -523,8 +552,8 @@ class MerryGoRound {
         _this.setActive(this.itemLen)
       }
 
-      //現在の位置が0の初期位置の場合、ループ処理
-      if (Math.abs(sliderCurrentPos) == 0) {
+      //現在の位置が初期位置の場合、ループ処理
+      if (Math.abs(sliderCurrentPos) == this.margineNum) {
         console.log('ループ')
         loopFlag = true
         _this.setActive(_this.itemLen)
@@ -540,11 +569,11 @@ class MerryGoRound {
         }
         if (loopFlag && direction == 'next') {
           TweenMax.set(_this.elId, {
-            x: 0,
+            x: _this.margine,
           })
         } else if (loopFlag && direction == 'prev') {
           TweenMax.set(_this.elId, {
-            x: -(count * _this.winW / _this.count) * (_this.itemLen - 1),
+            x: -(parseInt(this.slideItemW, 10) * (_this.itemLen - 1)),
           })
         }
         loopFlag = false
@@ -732,10 +761,34 @@ class MerryGoRound {
     )
   }
 
-  resize() {
+  /*------------------------------
+  * リサイズイベントの付与
+  ------------------------------*/
+  setResizeEvent() {
     let _this = this
     window.addEventListener('resize', function () {
       _this.winW = document.body.clientWidth
     })
+  }
+  /*------------------------------
+* リサイズイベントの付与
+------------------------------*/
+  resizeEvent() {
+    //アニメーション中だった場合現在のアニメーションを終了させる
+    _this.skipSlideAnimate()
+
+    //自動でスライド中の場合のアニメーションを終了させてから
+    //再自動スライド開始する
+    if (_this.autoSlide > 0) {
+      _this.stopAutoAnimate()
+    }
+
+    let sliderCurrentPos = document.querySelectorAll(this.elId)[0].style.transform
+    if (sliderCurrentPos == '') {
+      sliderCurrentPos = 0
+    } else {
+      //trasnformXの値を取得
+      sliderCurrentPos = Number(sliderCurrentPos.replace('matrix(', '').replace(')', '').split(',')[4])
+    }
   }
 }
