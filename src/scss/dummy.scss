@@ -1,0 +1,26 @@
+@import "./reset";
+body {
+  font-family: 'Quicksand', sans-serif;
+}
+
+header {
+  padding: 2.5vmax;
+  font-size: 5vmax;
+  letter-spacing: 0.01em;
+  color: #928585;
+  line-height: 1;
+}
+
+img {
+  filter: contrast(0.7);
+  background: #fff;
+}
+
+footer {
+  margin-top: 8vmax;
+  padding: 4vmax;
+  background: #928585;
+  text-align: center;
+  color: #fff;
+  font-size: 1vmax;
+}
