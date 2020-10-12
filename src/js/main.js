@@ -573,7 +573,7 @@ class MerryGoRound {
           })
         } else if (loopFlag && direction == 'prev') {
           TweenMax.set(_this.elId, {
-            x: -(parseInt(this.slideItemW, 10) * (_this.itemLen - 1)),
+            x: -(parseInt(_this.slideItemW, 10) * (_this.itemLen - 1))+_this.margineNum,
           })
         }
         loopFlag = false
