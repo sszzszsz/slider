@@ -75,13 +75,13 @@ gulp.task('babel', () => {
 
 // ◯magemin・pngquant・mozjpeg / 圧縮率の定義
 gulp.task('imagemin', function () {
-  return gulp.src([srcDir + '/img/**/*.{jpg,jpeg,png,gif,svg}', '!' + srcDir + '/img/**/_*.{jpg,jpeg,png,gif,svg}'])
-    .pipe(imagemin([
-      pngquant({ quality: [.7, .85], speed: 1 }),
-      mozjpeg({ quality: 80 }),
-      imagemin.svgo(),
-      imagemin.gifsicle()
-    ]))
+  return gulp.src([srcDir + '/img/**/*.{jpg,jpeg,png,gif,svg}'])
+    // .pipe(imagemin([
+    //   pngquant({ quality: [.7, .85], speed: 1 }),
+    //   mozjpeg({ quality: 80 }),
+    //   imagemin.svgo(),
+    //   // imagemin.gifsicle()
+    // ]))
     .pipe(gulp.dest(distDir + '/assets/img'));
 })
 
@@ -112,4 +112,4 @@ gulp.task('watch', function () {
 });
 
 // default
-gulp.task('default', gulp.parallel('browser-sync', 'watch'));
+gulp.task('default', gulp.series('pug','sass','babel','imagemin','browser-sync', 'watch'));
